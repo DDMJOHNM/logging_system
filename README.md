@@ -49,7 +49,7 @@ A system that I can use to monitor errors and manage the costs of projects and m
 
 
 ## Architecture options
-|  **A. Original / HTTPS-only** | **B. Optional — WebSocket ingest** | **C. Optional — OpenAI Realtime API** |
+| | **A. Original / HTTPS-only** | **B. Optional — WebSocket ingest** | **C. Optional — OpenAI Realtime API** |
 | --- | --- | --- | --- |
 | **Role** | Default transport: `POST` logs, `GET` dashboard + polling | Add `wss://` **to your API** only (`ingest_websocket`) when you want server push | Add **OpenAI** `wss://api.openai.com/v1/realtime` for voice / Realtime sessions |
 | **OpenAI (product app)** | **HTTPS** `chat.completions` / embeddings only; **no** Realtime unless you also adopt **C** | Same — **no** OpenAI Realtime unless you also adopt **C** | **Realtime** token/session charges on **[OpenAI Usage](https://platform.openai.com/usage)** |
@@ -263,4 +263,3 @@ The `app` container runs `composer install` if `vendor/` is missing and applies 
 | `console.php` | Artisan-only scheduling / closures |
 
 `api.php` is loaded with the `api` middleware and prefixed with `/api` (see `bootstrap/app.php`).
-# logging_system
