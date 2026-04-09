@@ -1,4 +1,4 @@
-# Project One - System Design:  Project Management Tool Logging System
+# System Design:  Project Management Tool Logging System
 
 A system that I can use to monitor errors and manage the costs of projects and monitor the separate systems that I create that utilise OpenAi and AWS. 
 
