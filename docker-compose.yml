@@ -1,0 +1,95 @@
+services:
+  mysql:
+    image: mysql:8.4
+    # Default /dev/shm (64MB) is tight for InnoDB; native AIO can misbehave on Docker Desktop file systems.
+    shm_size: 256mb
+    command: ["mysqld", "--innodb-use-native-aio=0"]
+    environment:
+      MYSQL_DATABASE: logging
+      MYSQL_USER: logging
+      MYSQL_PASSWORD: logging
+      MYSQL_ROOT_PASSWORD: rootsecret
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-prootsecret"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  app:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8080
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: logging
+      DB_USERNAME: logging
+      DB_PASSWORD: logging
+      REDIS_HOST: redis
+      CACHE_STORE: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./backend:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+
+  # Long-poll SQS and persist observability events. Requires AWS credentials and OBSERVABILITY_SQS_QUEUE_URL.
+  # Start with: docker compose --profile sqs up -d
+  sqs-worker:
+    profiles: ["sqs"]
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8080
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: logging
+      DB_USERNAME: logging
+      DB_PASSWORD: logging
+      REDIS_HOST: redis
+      CACHE_STORE: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
+      OBSERVABILITY_SQS_CONSUMER_ENABLED: "true"
+      OBSERVABILITY_SQS_QUEUE_URL: ${OBSERVABILITY_SQS_QUEUE_URL:-}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+    command: ["php", "artisan", "observability:consume-sqs"]
+
+volumes:
+  mysql_data:
