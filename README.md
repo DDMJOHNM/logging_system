@@ -230,6 +230,48 @@ If user count and usage per project grow enough that **latency rises** (queues b
 - **Data layer**: rising latency from the database is addressed with **read scaling** (replicas, cached dashboard reads), **RDS Proxy** or connection pooling, and **sharding or partitioning by tenant/region** before expecting a load balancer to fix DB-bound latency.
 
 
+## Implemented backend (high-level class diagram)
+
+The Laravel app under `backend/` ingests observability events in two ways: **HTTP** (`POST /api/v1/ingest`) and **SQS** (Node `SendMessage` → long-poll consumer). Both paths validate and persist through the same action; the HTTP controller does not call SQS.
+
+```mermaid
+classDiagram
+  direction TB
+
+  class IngestController {
+    +store(Request) JsonResponse
+  }
+
+  class ObservabilityConsumeSqsCommand {
+    +handle(SqsClient) int
+  }
+
+  class PersistObservabilityEvent {
+    +rules() array
+    +persist(data) ObservabilityEvent
+  }
+
+  class ObservabilityEvent {
+    <<Eloquent Model>>
+  }
+
+  class SqsClient {
+    <<AWS SDK>>
+  }
+
+  class AppServiceProvider {
+    +register()
+  }
+
+  IngestController --> PersistObservabilityEvent : validate then persist
+  ObservabilityConsumeSqsCommand --> PersistObservabilityEvent : JSON body → persist()
+  ObservabilityConsumeSqsCommand ..> SqsClient : ReceiveMessage,\n DeleteMessage
+  PersistObservabilityEvent --> ObservabilityEvent : create()
+  AppServiceProvider ..> SqsClient : registers singleton
+```
+
+**Flow summary:** `IngestController` and `ObservabilityConsumeSqsCommand` both depend on `PersistObservabilityEvent`, which applies the same validation rules and writes an `ObservabilityEvent` row (including a JSON `payload` column). The Artisan command `php artisan observability:consume-sqs` is the long-running SQS poller; `SqsClient` is constructed once per application lifecycle via `AppServiceProvider`.
+
 
 # Running this application locally
 
