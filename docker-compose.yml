@@ -19,20 +19,33 @@ services:
       timeout: 5s
       retries: 10
 
+  # Laravel + Redis Insight: DB 0 default; cache uses REDIS_CACHE_DB (see config/database.php). No auth in this image.
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
-
+  redis-insight:
+    image: redis/redisinsight:latest
+    depends_on:
+      - redis
+    # Web UI: http://localhost:5540 — Add database: Host "redis" (not 127.0.0.1), Port 6379, TLS off, no password.
+    # (127.0.0.1 from inside this container does not reach the Redis service.)
+    ports:
+      # Override if 5540 is taken: REDIS_INSIGHT_PORT=5541 in repo-root .env
+      - "${REDIS_INSIGHT_PORT:-5540}:5540"
   app:
     build:
       context: ./docker/php
       dockerfile: Dockerfile
     volumes:
       - ./backend:/var/www/html
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       mysql:
         condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       APP_ENV: local
       APP_DEBUG: "true"
@@ -70,6 +83,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       APP_ENV: local
       APP_DEBUG: "true"
