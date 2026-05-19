@@ -60,6 +60,8 @@ services:
       CACHE_STORE: redis
       SESSION_DRIVER: redis
       QUEUE_CONNECTION: redis
+      # Runs `php artisan db:seed` after migrate when app container starts (dev). Rebuild `app` after changing entrypoint.sh.
+      RUN_SEED_ON_START: "false"
 
   nginx:
     image: nginx:alpine
