@@ -35,8 +35,10 @@ class LogController extends Controller
         if (! in_array($direction, ['ASC', 'DESC'], true)) {
             $direction = 'DESC';
         }
+        
+        $page = max(1, (int) $request->query('page', 1));
 
-        $perPage = min(max((int) $request->query('per_page', 10), 1), 100);
+        $perPage = max(1, min(100, (int) $request->query('perPage', 10)));
 
         $query = ObservabilityEvent::query()
             ->where('project_id', $project_id);
@@ -50,7 +52,7 @@ class LogController extends Controller
 
         $logs = $query
             ->orderBy($orderBy, $direction)
-            ->paginate($perPage);
+            ->paginate($perPage, ['*'], 'page', $page);
 
         return response()->json([
             'logs' => $logs,
