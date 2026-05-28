@@ -56,3 +56,23 @@ resource "aws_iam_user_group_membership" "logging_system_admin_cloud_watch" {
     aws_iam_group.cloud_watch_logging_system.name,
   ]
 }
+
+resource "aws_iam_user_policy" "amazon_sqs_full_access" {
+  user = aws_iam_user.logging_system_admin_user.name
+  name = "AmazonSQSFullAccess"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:SendMessage",
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes",
+        ]
+        Resource = var.sqs_queue_arn
+      }
+      ]
+    })
+}

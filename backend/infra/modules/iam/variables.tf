@@ -10,3 +10,8 @@ variable "stack_name" {
     type = string
     default = "logging-system"
 }
+
+variable "sqs_queue_arn" {
+  description = "ARN of the SQS queue the admin user may access"
+  type        = string
+}

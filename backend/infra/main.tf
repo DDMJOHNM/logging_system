@@ -25,6 +25,15 @@ provider "aws" {
 data "aws_caller_identity" "current" {}
 
 module "iam" {
-  source = "./modules/iam"
+  source        = "./modules/iam"
+  sqs_queue_arn = module.default_sqs.default_sqs_queue_arn
+}
+
+module "default_sqs" {
+  source = "./modules/sqs"
+  name = "default_sqs"
+  tags = {
+    Name = "default_sqs"
+  }
 }
  
