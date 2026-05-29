@@ -73,6 +73,6 @@ resource "aws_iam_user_policy" "amazon_sqs_full_access" {
         ]
         Resource = var.sqs_queue_arn
       }
-      ]
-    })
+    ]
+  })
 }

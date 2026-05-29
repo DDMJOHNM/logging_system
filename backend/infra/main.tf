@@ -31,9 +31,16 @@ module "iam" {
 
 module "default_sqs" {
   source = "./modules/sqs"
-  name = "default_sqs"
+  name   = "default_sqs"
   tags = {
     Name = "default_sqs"
   }
 }
- 
+
+module "ec2_instance" {
+  source          = "./modules/ec2"
+  aws_account_id  = data.aws_caller_identity.current.account_id
+  stack_name      = var.stack_name
+  aws_region      = var.aws_region
+  environment     = var.environment
+}

@@ -1,6 +1,8 @@
 # Accidental composer install at repo root (Laravel app lives in backend/)
 /vendor/
 
+.env.production
+
 # Terraform (keep state + provider cache out of git)
 **/.terraform/
 **/.terraform.lock.hcl
