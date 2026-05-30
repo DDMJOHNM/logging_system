@@ -15,3 +15,9 @@ variable "environment" {
   type        = string
   default     = "production"
 }
+
+variable "backend_url_override" {
+  description = "Optional backend URL for API Gateway; when empty, uses the EC2 instance URL"
+  type        = string
+  default     = ""
+}
