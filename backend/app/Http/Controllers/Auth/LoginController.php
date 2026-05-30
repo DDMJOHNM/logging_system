@@ -32,4 +32,11 @@ class LoginController extends Controller
 
         return response()->json(['token' => $token->plainTextToken]);
     }
+
+    public function logout(Request $request): JsonResponse
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json(['message' => 'Logged out successfully.']);
+    }
 }

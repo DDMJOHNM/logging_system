@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Cache;
 
 class IngestController extends Controller
 {
+    //testing end point only
     public function __construct(
         private PersistObservabilityEvent $persistObservabilityEvent,
     ) {}

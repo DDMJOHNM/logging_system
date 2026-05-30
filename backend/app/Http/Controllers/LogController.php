@@ -6,6 +6,7 @@ use App\Models\ObservabilityEvent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 
 class LogController extends Controller
 {
@@ -35,8 +36,10 @@ class LogController extends Controller
         if (! in_array($direction, ['ASC', 'DESC'], true)) {
             $direction = 'DESC';
         }
+        
+        $page = max(1, (int) $request->query('page', 1));
 
-        $perPage = min(max((int) $request->query('per_page', 10), 1), 100);
+        $perPage = max(1, min(100, (int) $request->query('perPage', 10)));
 
         $query = ObservabilityEvent::query()
             ->where('project_id', $project_id);
@@ -50,7 +53,19 @@ class LogController extends Controller
 
         $logs = $query
             ->orderBy($orderBy, $direction)
-            ->paginate($perPage);
+            ->paginate($perPage, ['*'], 'page', $page);            
+
+        //When using get if the logs are already in the cache get them from the cache instead of the database    
+        // foreach ($logs as $log) {
+        //     $cachedLog = Cache::get('log_'.$log->event_id, $log->toArray(), 6000);
+        //     if ($cachedLog) {
+        //         $logs->push($cachedLog);
+        //     }
+        // }
+        //Cache::put('logs_'.$project_id.'_'.$page.'_'.$perPage.'_'.$orderBy.'_'.$direction, $logs->toArray(), 6000);
+        // foreach ($logs as $log) {
+        //     Cache::get('log_'.$log->event_id, $log->toArray(), 6000);
+        // }
 
         return response()->json([
             'logs' => $logs,
