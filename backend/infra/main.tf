@@ -44,3 +44,12 @@ module "ec2_instance" {
   aws_region      = var.aws_region
   environment     = var.environment
 }
+
+module "api_gateway" {
+  source = "./modules/api-gateway"
+  stack_name = var.stack_name
+  environment = var.environment
+  stage_name = "prod"
+  backend_url = var.backend_url_override != "" ? var.backend_url_override : module.ec2_instance.backend_url
+  cloudwatch_log_group_arn = "arn:aws:logs:us-east-1:051826704696:log-group:/aws/apigateway/mos5j2g72f"
+}
