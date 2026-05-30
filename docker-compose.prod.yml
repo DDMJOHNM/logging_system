@@ -1,5 +1,5 @@
 # Production stack for EC2. Deploy with:
-#   docker compose -f docker-compose.prod.yml up -d --build
+#   docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
 #
 # Copy .env.production.example to .env.production and set secrets before first boot.
 # Migrations run via app entrypoint on container start. Do not enable RUN_SEED_ON_START in prod.

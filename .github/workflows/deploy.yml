@@ -39,13 +39,15 @@ jobs:
             --arg ref "$GIT_REF" \
             '[
               "set -euo pipefail",
+              ("git config --system --add safe.directory " + $dir),
               ("cd " + $dir),
+              "if [ ! -d .git ]; then git clone https://github.com/DDMJOHNM/logging_system.git .; fi",
               "git fetch origin",
               ("git checkout " + $ref),
               ("git pull origin " + $ref),
               "test -f .env.production || { echo \"Missing .env.production on host\"; exit 1; }",
-              "docker compose -f docker-compose.prod.yml up -d --build",
-              "docker compose -f docker-compose.prod.yml ps"
+              "docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build",
+              "docker compose --env-file .env.production -f docker-compose.prod.yml ps"
             ]')
 
           COMMAND_ID=$(aws ssm send-command \

@@ -19,6 +19,8 @@ chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
 ln -sf /usr/local/lib/docker/cli-plugins/docker-compose /usr/local/bin/docker-compose
 
 mkdir -p /opt/logging_system
-chown ec2-user:ec2-user /opt/logging_system
+git config --system --add safe.directory /opt/logging_system
+git clone https://github.com/DDMJOHNM/logging_system.git /opt/logging_system
+chown -R ec2-user:ec2-user /opt/logging_system
 
-echo "Bootstrap complete. Clone the repo to /opt/logging_system and add .env.production before first deploy."
+echo "Bootstrap complete. Add /opt/logging_system/.env.production before first deploy."
