@@ -32,9 +32,9 @@ class LogController extends Controller
             $orderBy = 'occurred_at';
         }
 
-        $direction = strtoupper((string) $request->query('orderDirection', 'desc'));
-        if (! in_array($direction, ['ASC', 'DESC'], true)) {
-            $direction = 'DESC';
+        $direction = strtolower((string) $request->query('orderDirection', 'desc'));
+        if (! in_array($direction, ['asc', 'desc'], true)) {
+            $direction = 'desc';
         }
         
         $page = max(1, (int) $request->query('page', 1));
