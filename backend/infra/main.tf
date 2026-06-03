@@ -43,6 +43,7 @@ module "ec2_instance" {
   stack_name      = var.stack_name
   aws_region      = var.aws_region
   environment     = var.environment
+  sqs_queue_arn   = module.default_sqs.default_sqs_queue_arn
 }
 
 module "api_gateway" {
