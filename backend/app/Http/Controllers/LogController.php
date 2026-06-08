@@ -53,19 +53,14 @@ class LogController extends Controller
 
         $logs = $query
             ->orderBy($orderBy, $direction)
-            ->paginate($perPage, ['*'], 'page', $page);            
+            ->paginate($perPage, ['*'], 'page', $page);     
 
-        //When using get if the logs are already in the cache get them from the cache instead of the database    
-        // foreach ($logs as $log) {
-        //     $cachedLog = Cache::get('log_'.$log->event_id, $log->toArray(), 6000);
-        //     if ($cachedLog) {
-        //         $logs->push($cachedLog);
-        //     }
-        // }
-        //Cache::put('logs_'.$project_id.'_'.$page.'_'.$perPage.'_'.$orderBy.'_'.$direction, $logs->toArray(), 6000);
-        // foreach ($logs as $log) {
-        //     Cache::get('log_'.$log->event_id, $log->toArray(), 6000);
-        // }
+        foreach ($logs as $log) {
+            $logKey = 'log_'.$project_id.'_'.$log->event_id;
+            if (! Cache::has($logKey)) {
+                Cache::put($logKey, $log->toArray(), 604800);
+            }
+        }
 
         return response()->json([
             'logs' => $logs,
@@ -78,6 +73,14 @@ class LogController extends Controller
             return response()->json(['message' => 'Invalid event_id.'], 422);
         }
 
+        $logKey = 'log_'.$project_id.'_'.$event_id;
+        $cachedLog = Cache::get($logKey);
+        if ($cachedLog !== null) {
+            return response()->json([
+                'log' => $cachedLog,
+            ]);
+        }
+
         $log = ObservabilityEvent::query()
             ->where('project_id', $project_id)
             ->where('event_id', $event_id)
@@ -87,8 +90,11 @@ class LogController extends Controller
             return response()->json(['message' => 'Log not found.'], 404);
         }
 
+        $logData = $log->toArray();
+        Cache::put($logKey, $logData, 6000);
+
         return response()->json([
-            'log' => $log,
+            'log' => $logData,
         ]);
     }
 }
