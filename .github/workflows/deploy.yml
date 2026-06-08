@@ -48,10 +48,13 @@ jobs:
               "test -f .env.production || { echo \"Missing .env.production on host\"; exit 1; }",
               "CHANGED=$(git diff --name-only ORIG_HEAD HEAD 2>/dev/null || true)",
               "IMAGE_ID=$(docker compose --env-file .env.production -f docker-compose.prod.yml images -q app 2>/dev/null | head -1)",
-              "if [ -z \"$IMAGE_ID\" ] || echo \"$CHANGED\" | grep -qE \"^(docker/|docker-compose\\.prod\\.yml)\"; then",
+              "if [ -z \"$IMAGE_ID\" ] || echo \"$CHANGED\" | grep -qE '^docker/php/'; then",
               "  docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build",
               "else",
               "  docker compose --env-file .env.production -f docker-compose.prod.yml up -d",
+              "fi",
+              "if echo \"$CHANGED\" | grep -qE '^docker/nginx/'; then",
+              "  docker compose --env-file .env.production -f docker-compose.prod.yml restart nginx",
               "fi",
               "docker compose --env-file .env.production -f docker-compose.prod.yml ps"
             ]')
