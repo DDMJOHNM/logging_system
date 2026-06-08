@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -46,7 +46,13 @@ jobs:
               ("git checkout " + $ref),
               ("git pull origin " + $ref),
               "test -f .env.production || { echo \"Missing .env.production on host\"; exit 1; }",
-              "docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build",
+              "CHANGED=$(git diff --name-only ORIG_HEAD HEAD 2>/dev/null || true)",
+              "IMAGE_ID=$(docker compose --env-file .env.production -f docker-compose.prod.yml images -q app 2>/dev/null | head -1)",
+              "if [ -z \"$IMAGE_ID\" ] || echo \"$CHANGED\" | grep -qE '^(docker/|docker-compose\\.prod\\.yml)'; then",
+              "  docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build",
+              "else",
+              "  docker compose --env-file .env.production -f docker-compose.prod.yml up -d",
+              "fi",
               "docker compose --env-file .env.production -f docker-compose.prod.yml ps"
             ]')
 
@@ -60,7 +66,7 @@ jobs:
 
           echo "SSM command id: $COMMAND_ID"
 
-          for i in $(seq 1 60); do
+          for i in $(seq 1 180); do
             STATUS=$(aws ssm get-command-invocation \
               --command-id "$COMMAND_ID" \
               --instance-id "$EC2_INSTANCE_ID" \
