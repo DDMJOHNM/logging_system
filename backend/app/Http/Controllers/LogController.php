@@ -58,7 +58,7 @@ class LogController extends Controller
         foreach ($logs as $log) {
             $logKey = 'log_'.$project_id.'_'.$log->event_id;
             if (! Cache::has($logKey)) {
-                Cache::put($logKey, $log->toArray(), 6000);
+                Cache::put($logKey, $log->toArray(), 604800);
             }
         }
 
